@@ -31,3 +31,20 @@ Special thanks to [Kaspars Dambis](https://profiles.wordpress.org/kasparsd/) for
 4. Once you've added content to the widget, click save, and the Dashboard Notes settings for this widget will appear.
 5. Adjust the settings to meet your needs, and click save again.
 6. Navigate to any page to see your new note in action.
+
+== Screenshots ==
+
+1. Dashboard Notes adds a new widget area which can be used to add new notes.
+2. Each widget in the Dashboard Notes widget area has a number of settings you can use to customize how and where the note appears (note: you must initially save the widget once for these settings to appear).
+3. The final product! Add as many notes as you like.
+
+== Changelog ==
+
+= 1.0.0 =
+* First release!
+
+
+== Upgrade Notice ==
+
+= 1.0.0 =
+* First release!
