@@ -4,7 +4,7 @@ Tags: dashboard, admin, backend, notes, instructions, notifications, client
 Donate link: http://mightyminnow.com
 Requires at least: 3.0
 Tested up to: 3.9
-Stable tag: 1.0.0
+Stable tag: 1.0.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -39,12 +39,22 @@ Special thanks to [Kaspars Dambis](https://profiles.wordpress.org/kasparsd/) for
 3. The final product! Add as many notes as you like.
 
 == Changelog ==
+= 1.0.2 =
+* Added isset() to 'include-logo' option conditional to fix warning message
+
+= 1.0.1 =
+* Removed extraneous header info causing install error
 
 = 1.0.0 =
 * First release!
 
 
 == Upgrade Notice ==
+= 1.0.2 =
+* Added isset() to 'include-logo' option conditional to fix warning message
+
+= 1.0.1 =
+* Removed extraneous header info causing install error
 
 = 1.0.0 =
 * First release!
