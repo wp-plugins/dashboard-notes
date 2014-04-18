@@ -39,12 +39,16 @@ Special thanks to [Kaspars Dambis](https://profiles.wordpress.org/kasparsd/) for
 3. The final product! Add as many notes as you like.
 
 == Changelog ==
+= 1.0.1 =
+* Removed extraneous header info causing install error
 
 = 1.0.0 =
 * First release!
 
 
 == Upgrade Notice ==
+= 1.0.1 =
+* Removed extraneous header info causing install error
 
 = 1.0.0 =
 * First release!
