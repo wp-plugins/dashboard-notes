@@ -2,15 +2,10 @@
 /**
  * Dashboard Notes
  *
- * @package   Dashboard Notes
- * @author    MIGHTYminnow <info@mightyminnow.com>
- * @license   GPL-2.0+
- * @link      http://wordpress.org/plugins/dashboard-notes
- *
  * Plugin Name:       Dashboard Notes
  * Plugin URI:        http://wordpress.org/plugins/dashboard-notes
  * Description:       Create dashboard notes/instructions for your client.
- * Version:           1.0.1
+ * Version:           1.0.2
  * Author:            MIGHTYminnow
  * Author URI:        http://mightyminnow.com
  * Text Domain:       dashboard-notes
@@ -18,14 +13,6 @@
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
  * Domain Path:       /lang
  */
-
-/**
-
-    TODO:
-    - Add credit to Widget Context for code
-
-    **/
-
 
 /**
  * Set up new Dashboard Notes object.
@@ -262,7 +249,7 @@ class DashboardNotes {
                 ?>
                 <div class="<?php echo $class; ?> dashboard-note">
                     <?php
-                    if ( $widget_options['include-logo'] ) {
+                    if ( isset( $widget_options['include-logo'] ) ) {
                         if ( $widget_options['logo-url'] )
                             $logo_url = $widget_options['logo-url'];
                         else
