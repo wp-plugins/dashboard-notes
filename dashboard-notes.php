@@ -5,13 +5,14 @@
  * Plugin Name:       Dashboard Notes
  * Plugin URI:        http://wordpress.org/plugins/dashboard-notes
  * Description:       Create dashboard notes/instructions for your client.
- * Version:           1.0.2
+ * Version:           1.0.3
  * Author:            MIGHTYminnow
  * Author URI:        http://mightyminnow.com
  * Text Domain:       dashboard-notes
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
- * Domain Path:       /lang
+ * Text Domain:       dashboard-notes
+ * Domain Path:       /languages
  */
 
 /**
@@ -30,15 +31,28 @@ class DashboardNotes {
     var $plugin_id = 'dashboard-notes';
     var $options_name = 'dashboard_notes_options';
     var $dn_options = array();
+    var $plugin_settings = array();
     var $words_on_page = 0;
     var $notes_logos;
     
     function __construct() {
+
+        // Don't do anything unless we're in the admin.
+        if ( ! is_admin() ) {
+            return;
+        }
+
+        add_action( 'plugins_loaded', array( $this, 'load_text_domain') );
+
         // Load plugin settings
-        add_action( 'init', array( $this, 'load_plugin_settings' ), 0 );
+        add_action( 'init', array( $this, 'load_plugin_settings' ) );
 
         // Register sidebar
         add_action( 'widgets_init', array( $this, 'register_sidebar' ), 99 );
+
+        // Set up the admin settings page.
+        add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
+        add_action( 'admin_init', array( $this, 'add_settings' ) );
 
         // Save widget context settings, when in admin area
         add_filter( 'admin_init', array( $this, 'save_widget_context_settings' ) );
@@ -49,12 +63,56 @@ class DashboardNotes {
         // Amend widget controls with Widget Context controls
         add_action( 'sidebar_admin_setup', array( $this, 'attach_widget_controls' ) );
 
-        // Add custom note styles (logo, etc)
-        //add_action( 'admin_head', array( $this, 'output_note_specific_css' ) );
-
         // Display dashboard notes
-        if ( is_admin() )
-            add_action( 'admin_notices', array( $this, 'display_notices' ) );
+        add_action( 'admin_notices', array( $this, 'display_notices' ) );
+    }
+
+    /**
+     * Load text domain.
+     *
+     * @since  1.0.3
+     */
+    function load_text_domain() {
+        $plugin_dir = basename( dirname(__FILE__) );
+        load_plugin_textdomain( 'dashboard-notes', false, $plugin_dir );
+    }
+
+    /**
+     * Get available user roles.
+     *
+     * This function is included manually, because WP's native
+     * get_editable_roles() function isn't available early enough.
+     *
+     * @since   1.0.3
+     *
+     * @return  array  Editable user roles.
+     */
+    function get_user_roles() {
+        
+        global $wp_roles;
+
+        $all_roles = $wp_roles->roles;
+
+        /**
+         * Filter the list of editable roles using WP's standard filter.
+         *
+         * @since  1.0.3
+         * 
+         * @param  array  $editable_roles  Editable user roles.
+         */
+        $editable_roles = apply_filters( 'editable_roles', $all_roles );
+
+        /**
+         * Filter the list of editable roles using custom DN filter.
+         *
+         * @since  1.0.3
+         * 
+         * @param  array  $editable_roles  Editable user roles.
+         */
+        $editable_roles = apply_filters( 'dn_editable_roles', $all_roles );
+
+        return $editable_roles;
+
     }
 
     function load_plugin_settings() {
@@ -62,6 +120,7 @@ class DashboardNotes {
         $this->plugin_name = __( 'Dashboard Notes', 'dashboard-notes' );
 
         $this->dn_options = get_option( $this->options_name );
+        $this->plugin_settings = $this->get_plugin_settings();
 
         if ( ! is_array( $this->dn_options ) || empty( $this->dn_options ) )
             $this->dn_options = array();
@@ -145,60 +204,215 @@ class DashboardNotes {
 
     }
 
+    /**
+     * Get settings options.
+     *
+     * @since   1.0.3
+     *
+     * @return  array  Plugin settings.
+     */
+    function get_plugin_settings() {
+
+        return wp_parse_args( 
+            get_option( $this->plugin_id, array() ), 
+            $this->get_settings_defaults() 
+        );
+    
+    }
+
+    /**
+     * Return array of settings defaults.
+     *
+     * @since   1.0.3
+     *
+     * @return  array  $defaults  Plugin settings defaults.
+     */
+    function get_settings_defaults() {
+
+        $defaults = array();
+
+        foreach ( $this->get_user_roles() as $role_id => $role ) {
+            $defaults[ $role_id ] = true;
+        }
+
+        return $defaults;
+
+    }
+
+    /**
+     * Create the plugin settings page.
+     */
+    function add_settings_page() {
+
+        add_options_page(
+            $this->plugin_name,
+            $this->plugin_name,
+            'manage_options',
+            $this->plugin_id,
+            array( $this, 'create_admin_page' )
+        );
+
+    }
+
+    /**
+     * Output the plugin settings page contents.
+     *
+     * @since  0.10.0
+     */
+    public function create_admin_page() {
+    ?>
+        <div class="wrap">
+            <?php screen_icon(); ?>
+            <h2><?php echo $this->plugin_name; ?></h2>
+            <form method="post" action="options.php">
+            <?php
+                // This prints out all hidden setting fields
+                settings_fields( 'option_group' );
+                do_settings_sections( $this->plugin_id );
+                submit_button();
+            ?>
+            </form>
+        </div>
+    <?php
+    }
+
+    /**
+     * Populate the settings page with specific settings.
+     *
+     * @since  0.10.0
+     */
+    function add_settings() {
+
+        register_setting(
+            'option_group', // Option group
+            $this->plugin_id, // Option name
+            array( $this, 'sanitize' ) // Sanitize
+        );
+
+        add_settings_section(
+            'settings_section_primary', // ID
+            ' ', // Title
+            array( $this, 'role_settings_callback' ), // Callback
+            $this->plugin_id // Page
+        );
+        
+        // Create checkbox for each role.
+        foreach ( $this->get_user_roles() as $role_id => $role ) {
+            
+            add_settings_field(
+                $role_id,
+                $role['name'],
+                array( $this, 'checkbox_callback' ),
+                $this->plugin_id,
+                'settings_section_primary',
+                array(
+                    'id'   => $role_id,
+                    'name' => $role['name'],
+                    'type' => 'checkbox',
+                )
+            );
+                    
+        }
+
+    }
+
+    function role_settings_callback() {
+        _e( 'Choose the roles for which dashboard notes should be visible.', 'dashboard-notes' );
+    }
+
+    /**
+     * Output a checkbox setting.
+     *
+     * @since  0.10.0
+     */
+    public function checkbox_callback( $args ) {        
+
+        $option_name = esc_attr( $this->plugin_id ) . '[' . $args['id'] . ']';
+        $option_value = isset( $this->plugin_settings[ $args['id'] ] ) ? $this->plugin_settings[ $args['id'] ] : '';
+        
+        printf(
+            '<input type="checkbox" value="1" id="%s" name="%s" %s/>',
+            $args['id'],
+            $option_name,
+            checked( 1, $option_value, false )
+        );
+
+    }
+
+    /**
+     * Sanitize saved setting.
+     *
+     * @since   1.0.3
+     *
+     * @param   array  $input      Settings array.
+     *
+     * @return  array  $new_input  Sanitized settings array.
+     */
+    function sanitize( $input ) {
+
+        // Initialize the new array that will hold the sanitize values.
+        $new_input = array();
+                
+        // Loop through the input and sanitize each of the values (true or false).
+        foreach ( $this->get_user_roles() as $role_id => $role ) {
+
+            $new_input[ $role_id ] = ( isset( $input[ $role_id ] ) ) ? true : false;
+
+        }
+
+        return $new_input;
+
+    }
 
     function save_widget_context_settings() {
         if ( ! current_user_can( 'edit_theme_options' ) || empty( $_POST ) || ! isset( $_POST['sidebar'] ) || empty( $_POST['sidebar'] ) )
             return;
 
-    // Delete
+        // Delete
         if ( isset( $_POST['delete_widget'] ) && $_POST['delete_widget'] )
             unset( $this->dn_options[ $_POST['widget-id'] ] );
 
-    // Add / Update
+        // Add / Update
         if ( isset( $_POST['dn'] ) )
             $this->dn_options = array_merge( $this->dn_options, $_POST['dn'] );
 
         update_option( $this->options_name, $this->dn_options );
     }
 
-    /*===========================================
-     * Output note-specific CSS
-    ===========================================*/
-    function output_note_specific_css() {
-         global $wp_registered_sidebars, $wp_registered_widgets;
+    /**
+     * Check whether or not the current user should se notices based on the plugin settings.
+     *
+     * @since   1.0.3
+     *
+     * @return  boolean  true|false
+     */
+    function current_user_can_see_notices() {
+        
+        // Get role(s) of current user.
+        $current_roles = wp_get_current_user()->roles;
 
-        $sidebar = $wp_registered_sidebars[ $this->plugin_id ];
+        foreach ( $current_roles as $role ) {
 
-        // Get array of widgets that are in the Dashboard Notes sidebar
-        $sidebar_widgets = wp_get_sidebars_widgets();
-        $dn_widgets = ! empty( $sidebar_widgets[ $this->plugin_id ] ) ? $sidebar_widgets[ $this->plugin_id ] : '';
+            if ( isset( $this->plugin_settings[ $role ] ) && $this->plugin_settings[ $role ] ) {
+                return true;
+            }
 
-        if ( ! $dn_widgets )
-            return false;
-
-        foreach( $dn_widgets as $id ) {
-
-            if ( !isset( $wp_registered_widgets[$id]) ) continue;
-
-            // Get widget options
-            $widget_options = isset( $this->dn_options[ $id ] ) ? $this->dn_options[ $id ] : array();
-
-            // Output widget-specific styles
-            if ( $widget_options['include-logo'] && $widget_options['logo-url'] ) : ?>
-                <style type="text/css">
-                div.include-logo.widget-id-<?php echo $id; ?>:before {
-                    content: url(<?php echo $widget_options['logo-url']; ?>);
-                }
-                </style>
-            <?php endif;
-            
         }
+
+        return false;
+                
     }
 
     /*===========================================
      * Output notices
     ===========================================*/
     function display_notices( ) {
+
+        // Don't do anything if the current user can't see notices.
+        if ( ! $this->current_user_can_see_notices() ) {
+            return;
+        }
+
         global $wp_registered_sidebars, $wp_registered_widgets;
 
         $sidebar = $wp_registered_sidebars[ $this->plugin_id ];
@@ -286,10 +500,6 @@ class DashboardNotes {
             $patterns_safe[] = trim( trim( $pattern ), '/' );
 
         $regexps = '/^('. preg_replace( array( '/(\r\n|\n| )+/', '/\\\\\*/' ), array( '|', '.*' ), preg_quote( implode( "\n", array_filter( $patterns_safe, 'trim' ) ), '/' ) ) .')$/';
-
-        // Debug
-        //echo $regexps;
-        //print_r(array_filter( $patterns_safe, 'trim' ));
 
         return preg_match( $regexps, $path );
     }

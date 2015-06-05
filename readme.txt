@@ -4,7 +4,7 @@ Tags: dashboard, admin, backend, notes, instructions, notifications, client
 Donate link: http://mightyminnow.com
 Requires at least: 3.0
 Tested up to: 3.9
-Stable tag: 1.0.2
+Stable tag: 1.0.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -20,6 +20,7 @@ Dashboard Notes lets you create super simple notes and instructions for your cli
 4. Once you've added content to the widget, click save, and the Dashboard Notes settings for this widget will appear.
 5. Adjust the settings to meet your needs, and click save when you're done.
 6. Refresh, or navigate to any page to see your new note in action.
+7. Use the plugin settings found via **Settings > Dashboard Notes** to choose which user roles can/can’t see the notices.
 
 = Credits =
 Special thanks to [Kaspars Dambis](https://profiles.wordpress.org/kasparsd/) for his work on [Widget Context](https://wordpress.org/plugins/widget-context/) - much of this project is based on that code. 
@@ -39,6 +40,10 @@ Special thanks to [Kaspars Dambis](https://profiles.wordpress.org/kasparsd/) for
 3. The final product! Add as many notes as you like.
 
 == Changelog ==
+= 1.0.3 =
+* Add plugin setting to choose which roles can and can’t see the dashboard notes.
+* Added .pot file for translation.
+
 = 1.0.2 =
 * Added isset() to 'include-logo' option conditional to fix warning message
 
@@ -50,6 +55,10 @@ Special thanks to [Kaspars Dambis](https://profiles.wordpress.org/kasparsd/) for
 
 
 == Upgrade Notice ==
+= 1.0.3 =
+* Add plugin setting to choose which roles can and can’t see the dashboard notes.
+* Added .pot file for translation.
+
 = 1.0.2 =
 * Added isset() to 'include-logo' option conditional to fix warning message
 
